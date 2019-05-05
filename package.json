@@ -11,9 +11,11 @@
   "license": "ISC",
   "dependencies": {
     "caman": "^4.1.2",
+    "chokidar": "^3.0.0",
     "debug": "^4.1.1",
     "nodemon": "^1.19.0",
     "r6stats": "0.0.3",
+    "request": "^2.88.0",
     "tesseract.js": "^1.0.14"
   }
 }

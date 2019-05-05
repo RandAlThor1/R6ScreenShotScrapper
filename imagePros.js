@@ -8,6 +8,8 @@ names = [];
 let renders = 0;
 let namesCount = 0;
 
+const playersPerMatch = 10;
+
 this.Tesseract = Tesseract.create({
   workerPath: "Z:/r6bot/node_modules/tesseract.js/src/node/worker.js",
   langPath: "Z:/r6bot/depen/eng.traineddata",
@@ -24,7 +26,7 @@ function textInImage(num) {
       names[num] = result.text;
       tessDebug(names[num]);
       namesCount++;
-      if (namesCount === 10) {
+      if (namesCount === playersPerMatch) {
         Tesseract.terminate();
         printNames();
       }
@@ -32,7 +34,7 @@ function textInImage(num) {
 }
 
 function textInImageloop() {
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < playersPerMatch; i++) {
     textInImage(i);
   }
 }
@@ -47,37 +49,36 @@ Caman.Event.listen("renderFinished", function() {
   camanDebug("RenderFinished");
 });
 
-function getName(num) {
+function getName(num, path) {
   const nameLeftLoc = 470; //pixels
   const nameHeight = 55; //pixels
   const nameWidth = 300; //pixels
-  Caman(
-    "C:/Users/Ben Allen/Pictures/Uplay/Tom Clancy's Rainbow Six® Siege/test2.jpg",
-    async function() {
-      {
-        await this.crop(nameWidth, nameHeight, nameLeftLoc, nameLocs[num]);
-        const newWidth = nameWidth * 10;
-        const newHeight = nameHeight * 10;
-        await this.resize({
-          width: newWidth,
-          height: newHeight
-        });
-        await this.contrast(100);
-        await this.invert();
-      }
-
-      await this.render(async function() {
-        await this.save(`./outputs/name${num}.png`);
-        renders++;
-        if (renders === 10) {
-          textInImageloop();
-        }
+  Caman(path, async function() {
+    {
+      await this.crop(nameWidth, nameHeight, nameLeftLoc, nameLocs[num]);
+      const newWidth = nameWidth * 10;
+      const newHeight = nameHeight * 10;
+      await this.resize({
+        width: newWidth,
+        height: newHeight
       });
+      await this.contrast(100);
+      await this.invert();
     }
-  );
+
+    await this.render(async function() {
+      await this.save(`./outputs/name${num}.png`);
+      renders++;
+      if (renders === playersPerMatch) {
+        textInImageloop();
+      }
+    });
+  });
 }
-for (let i = 0; i < 10; i++) {
-  getName(i);
+function run(path) {
+  for (let i = 0; i < playersPerMatch; i++) {
+    getName(i, path);
+  }
 }
 
 function printNames() {
@@ -131,3 +132,18 @@ function getStats(num) {
       console.error(names[num], "COULD NOT FIND!");
     });
 }
+
+const chokidar = require("chokidar");
+const watcher = chokidar.watch(
+  "C:/Users/Ben Allen/Pictures/Uplay/Tom Clancy's Rainbow Six® Siege/"
+);
+
+watcher
+  .on("add", function(path) {
+    setTimeout(() => {
+      run(path);
+    }, 1000);
+  })
+  .on("error", function(error) {
+    console.error(error);
+  });

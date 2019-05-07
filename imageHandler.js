@@ -25,7 +25,7 @@ class imageHandler {
                         height: newHeight
                     });
                     await this.contrast(100);
-                    await this.sharpen(100);
+                    await this.greyscale();
                     await this.invert();
                 }
 
@@ -43,10 +43,10 @@ class imageHandler {
 }
 
 Caman.Event.listen("processStart", function (job) {
-    //camanDebug("Start", job.name);
+    camanDebug("Start", job.name);
 });
 Caman.Event.listen("processComplete", function (job) {
-    //camanDebug("Complete", job.name);
+    camanDebug("Complete", job.name);
 });
 Caman.Event.listen("renderFinished", function () {
     camanDebug("RenderFinished");

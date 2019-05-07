@@ -6,11 +6,6 @@ class textRecognition {
         this.playersPerMatch = playersPerMatch;
         this.namesCount = 0;
         this.names = [];
-        this.Tesseract = Tesseract.create({
-            workerPath: "Z:/r6bot/node_modules/tesseract.js/src/node/worker.js",
-            langPath: "Z:/r6bot/depen/eng.traineddata",
-            corePath: "Z:/r6bot/depen/tesseract.js-core-master/index.js"
-        });
     }
     textInImage(callback) {
         for (let i = 0; i < this.playersPerMatch; i++) {

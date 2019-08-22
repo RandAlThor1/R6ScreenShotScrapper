@@ -12,8 +12,8 @@ class r6statsHandler {
     constructor() {
         this.authenticating = true;
         client = new R6Stats({
-            username: "RandAlThor.HDW",
-            password: "SunDried1!",
+            username: "*********",
+            password: "***********",
             user_agent: "R6Stats Node API Test Application"
         });
         //this.startAuth();

@@ -1,75 +1,112 @@
-const R6Stats = require("r6stats");
-const teamHandler = require("./teamHandler")
-const statsDebug = require("debug")("app:stats")
+const teamHandler = require("./teamHandler");
+const statsDebug = require("debug")("app:stats");
 const TH = new teamHandler();
-const user = require("./player")
+const user = require("./player");
 
+const https = require("https");
+const rp = require("request-promise");
 
-let client;
-let players;
 let recived = 0;
+
+const gen = "generic";
+const seas = "seasonal";
+const ops = "operators";
+const wepCat = "weapon-catagories";
+const wep = "wepons";
+
+
+
+function ServiceResponseError(message) {
+    this.name = "ServiceResponseError";
+    this.message = message || "";
+}
+ServiceResponseError.prototype = Error.prototype;
+
 class r6statsHandler {
-    constructor() {
-        this.authenticating = true;
-        client = new R6Stats({
-            username: "RandAlThor.HDW",
-            password: "SunDried1!",
-            user_agent: "R6Stats Node API Test Application"
-        });
-        //this.startAuth();
-        this.authenticating = false;
-        players = new client.services.PlayerService(client);
-    }
 
-    startAuth() {
-        statsDebug("starting authentication...")
-        this.authenticating = true;
-        client.authenticate().catch(err => {
-            statsDebug("authenticating complete");
-            this.authenticating = false;
+
+    getplayerElo(username) {
+        return this.req(username, seas).then(res => {
+            return Promise.resolve(res);
+        }).catch(err => {
+            throw new ServiceResponseError(err);
         });
     }
 
-    getAuth() {
-        return this.authenticating;
+    getOtherStats(username) {
+        return this.req(username, gen).then(res => {
+            return Promise.resolve(res);
+        }).catch(err => {
+            throw new ServiceResponseError(err);
+        });
+    }
+
+    async getPlayer(username) {
+        try {
+            let genStats = await this.getOtherStats(username);
+            let eloStats = await this.getplayerElo(username);
+            let player = {
+                username: genStats.username,
+                wlr: genStats.stats.queue.ranked.wl,
+                kdr: genStats.stats.queue.ranked.kd,
+                level: genStats.progression.level,
+                elo: eloStats.seasons.burnt_horizon.regions.ncsa[0].mmr
+            };
+            return player;
+        } catch (err) {
+            throw new ServiceResponseError(err);
+        }
+    }
+
+
+    req(username, type) {
+        const url = `https://api2.r6stats.com/public-api/stats/${username}/pc/${type}`;
+        var defaults = {
+            method: "GET",
+            json: true,
+            url: url,
+            headers: {
+                Authorization: "9d481f24-292e-478f-895a-34cff29736d4"
+            }
+        };
+        var options = Object.assign({}, defaults);
+
+        return rp(options);
     }
 
     getplayerId(num, names) {
-        if (!this.authenticating) {
-            setTimeout(() => {
-                players
-                    .getPlayer(names[num], "uplay")
-                    .then(function (player) {
-                        console.log(recived, " :res's")
-                        statsDebug(player.username, " : ", names[num]);
-                        statsDebug("debug: ", player.username, " : ", player.stats.ranked.wlr, " : ", player.stats.ranked.kd, " : ", player.stats.progression.level, " : ", num)
-                        TH.addPlayer(new user(player.username, player.stats.ranked.wlr, player.stats.ranked.kd, player.stats.progression.level, num));
-                        recived++;
-                    })
-                    .catch((error) => {
-                        if (error.name === "ServiceResponseError") {
-                            recived++;
-                            statsDebug("could not find : ", names[num])
-                        }
-                        else {
-                            recived++;
-                            statsDebug(error.message, " : ", error.name);
-                        }
-                    }).then(() => {
-                        if (recived === 10) {
-                            recived = 0;
-                            console.log("10: ", num);
-                            this.printStats();
-                        }
-                    });
+        this.getPlayer(names[num])
+            .then(function (player) {
+                //statsDebug(player.username, ": getPlayerId")
+                statsDebug(player.username, " : ", names[num]);
+                // statsDebug("debug: ", player.username, " : ", player.stats.ranked.wlr, " : ", player.stats.ranked.kd, " : ", player.stats.progression.level, " : ", num)
+                statsDebug(player.username, ": ", player.wlr, ": ", player.kdr, ": ", player.level, ": ", player.elo, ": ", num);
+                TH.addPlayer(new user(player.username, player.wlr, player.kdr, player.level, player.elo, num));
+                recived++;
+
+            })
+            .catch((error) => {
+                if (error.name === "ServiceResponseError") {
+                    recived++;
+                    statsDebug("could not find : ", names[num]);
+                }
+                else {
+                    recived++;
+                    statsDebug(error.message, " : ", error.name);
+                }
+            }).then(() => {
                 if (recived === 10) {
                     recived = 0;
-                    console.log("10: ", num);
                     this.printStats();
                 }
-            }, (num * 2000));
+            });
+        if (recived === 10) {
+            recived = 0;
+            console.log("10: ", num);
+            this.printStats();
         }
     }
+
 
     printStats() {
         TH.printAverages();

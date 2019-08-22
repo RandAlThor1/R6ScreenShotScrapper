@@ -64,7 +64,7 @@ class r6statsHandler {
       json: true,
       url: url,
       headers: {
-        Authorization: "9d481f24-292e-478f-895a-34cff29736d4"
+        Authorization: "auth key"
       }
     };
     var options = Object.assign({}, defaults);

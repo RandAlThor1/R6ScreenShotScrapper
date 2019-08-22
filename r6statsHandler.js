@@ -23,6 +23,7 @@ function ServiceResponseError(message) {
 ServiceResponseError.prototype = Error.prototype;
 
 class r6statsHandler {
+<<<<<<< HEAD
 
 
     getplayerElo(username) {
@@ -30,6 +31,14 @@ class r6statsHandler {
             return Promise.resolve(res);
         }).catch(err => {
             throw new ServiceResponseError(err);
+=======
+    constructor() {
+        this.authenticating = true;
+        client = new R6Stats({
+            username: "*********",
+            password: "***********",
+            user_agent: "R6Stats Node API Test Application"
+>>>>>>> 92d1032acf385c0a8cb57d1688365db94c01424b
         });
     }
 

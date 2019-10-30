@@ -16,6 +16,6 @@
     "discord.js": "^11.4.2",
     "image-downloader": "^3.4.2",
     "r6stats": "0.0.3",
-    "tesseract.js": "^1.0.16"
+    "tesseract.js": "^1.0.19"
   }
 }
